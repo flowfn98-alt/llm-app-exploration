@@ -24,23 +24,27 @@ Exploring while analyzing means you see what you want to see. Organizing while a
 
 ## Architecture
 
-Three layers, same as any good knowledge system:
+Four layers:
 
-**Screenshots** — the raw evidence. Numbered PNGs captured during exploration. Immutable. The agent captures them; no one edits them. This is ground truth.
+**Screenshots** — the raw evidence. Numbered PNGs captured during exploration. Immutable. Ground truth.
 
-**ROUTES.md** — the route map. A flat table mapping every screenshot to its screen name, key elements, and one-line description. Plus a checklist of explored vs. unexplored areas, and a notes section for context (app version, device quirks, test account credentials, app state). The agent builds this during exploration and keeps it current. It's the index, the log, and the status tracker in one file.
+**ROUTES.md** — the route map. A flat table mapping every screenshot to its screen name, key elements, and one-line description. Plus a checklist of explored vs. unexplored areas, and a notes section for context (app version, device quirks, test account credentials, app state). The index, the log, and the status tracker in one file.
 
-**User flows** — organized paths through the route map. "A user wants to complete a purchase" becomes a sequence of screenshots with step numbers, actions, and tap counts. Created after exploration is complete, by reading ROUTES.md and connecting the dots. One file per flow.
+**TRANSITIONS.md** — the transition table. Maps `screen + action → next screen`. Built naturally during exploration — every action's response shows the new screen. Once complete, entire multi-screen flows become fully deterministic and batchable without intermediate UI dumps.
 
-The screenshots are captured by the agent. ROUTES.md is maintained by the agent. User flows are created by the agent. You direct; the agent does the work.
+**User flows** — organized paths through the route map. "A user wants to complete a purchase" becomes a sequence of screenshots with step numbers, actions, and tap counts. Created after exploration is complete, by reading ROUTES.md and TRANSITIONS.md.
+
+All four are built by the agent. You direct; the agent does the work.
 
 ## Operations
 
-**Capture.** At each screen: take a screenshot, read the UI dump (structured elements with coordinates), record what you see. One row in ROUTES.md per screenshot. Number sequentially. Name descriptively. Move on.
+**Capture.** At each screen: read the UI elements, take a screenshot, record what you see. One row in ROUTES.md per screenshot. Number sequentially. Name descriptively. Move on.
 
-**Navigate.** Treat the app as a graph. DFS: for each tappable element on the current screen, tap it. If it's a new screen, recurse. If it's a modal or dropdown, capture and dismiss. Press BACK to return. When all elements are explored, the node is done. Maintain a checklist — mark what's explored, note what isn't.
+**Navigate.** Treat the app as a graph. DFS: for each tappable element on the current screen, tap it. If it's a new screen, record the transition and recurse. If it's a modal or bottom sheet, capture and dismiss. Press BACK to return. When all elements are explored, the node is done. Maintain a checklist — mark what's explored, note what isn't.
 
-**Document.** After exploration, read ROUTES.md end to end. Group screenshots into user flows by task. One flow = one user goal. Include step count and tap count — these are comparable across apps.
+**Record transitions.** Every action that changes the screen is a transition. The response from `mobile_do` always shows the new screen — log it as `screen + action → next screen` in TRANSITIONS.md.
+
+**Document.** After exploration, read ROUTES.md and TRANSITIONS.md end to end. Group screenshots into user flows by task. One flow = one user goal.
 
 ### Depth
 
@@ -116,6 +120,7 @@ This is a [patched fork](https://github.com/ForrestKim42/mobile-mcp/tree/feat/ll
 - **Action batching** — pass an array of actions to execute in sequence: `["tap TEXT:Bridge", "wait 2000", "tap INPUT:0", "type 5", "wait 5000", "tap BUTTON:Confirm"]`. The response includes the final screen state.
 - **React Native / Flutter support** — automatic fallback when standard UI dumping fails on animated apps. Bundled and auto-pushed to device on first use.
 - **Keyboard auto-dismiss** — typing automatically closes the keyboard afterward so subsequent taps hit the right coordinates.
+- **Bottom sheet dismiss** — `dismiss` action drags the sheet handle downward to close WebView-based bottom sheets that ignore BACK.
 
 ## Transition table
 
@@ -148,6 +153,8 @@ Build it naturally during Phase 1 exploration. Every time `mobile_do` returns af
 ## Tips and tricks
 
 **Biometric / FLAG_SECURE screens** capture as black. The UI dump still works — it reads the accessibility tree regardless. Cancel the biometric prompt to reach the password fallback.
+
+**Bottom sheets that won't close** — WebView-based bottom sheets may ignore BACK and backdrop taps. Use `dismiss` to drag the handle down. If no handle is found, it falls back to a swipe-down gesture.
 
 **Session breaks** are inevitable — context limits, app crashes, device timeouts. ROUTES.md's checklist is your resume point. Read it, find the unchecked items, continue from the last screenshot number.
 
@@ -191,6 +198,7 @@ products/
   app-a/
     screenshots/
     ROUTES.md
+    TRANSITIONS.md
     user-flows/
   app-b/
     ...
