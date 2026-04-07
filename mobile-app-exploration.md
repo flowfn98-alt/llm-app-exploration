@@ -121,23 +121,17 @@ Apps built with React Native, Flutter, or any framework with continuous animatio
 
 ## Action batching
 
-Once you know a flow — the screens, the coordinates, the transitions — you don't need to check the UI between every tap. Use `mobile_batch_taps` to execute multiple taps in a single MCP call, skipping the intermediate screenshot/dump cycles entirely.
+Once you know a flow — the screens, the coordinates, the transitions — you don't need to check the UI between every action. Batch multiple actions together, skipping the intermediate UI dump cycles.
 
-**Why it matters.** Each action normally costs a full cycle: tap → wait → UI dump → LLM decision → next tap. That's 5–10 seconds per step. A 10-step flow takes a minute. With batching, the same 10 steps execute in under 2 seconds.
+Each action normally costs a full cycle: action → wait → UI dump → LLM decision → next action. That's 5–10 seconds per step. Batching skips the middle steps for predictable sequences.
 
-**When to batch.** Same-screen actions are safe to batch — field edits, toggles, typing. Cross-screen transitions need timing (sleep) but work reliably when you know the target coordinates.
+**Safe to batch.** Same-screen actions — tapping multiple fields, entering text, toggling switches. The layout doesn't change, so coordinates stay valid.
 
-**When NOT to batch.** Screen transitions where the UI layout changes unpredictably:
-- **Bottom sheets / modals** — coordinates shift when they appear or the keyboard opens
-- **Biometric prompts** — FLAG_SECURE blocks screenshots; detect via UI dump, not visual
-- **Token/chain selection** — selecting a token may auto-open another selector or reset fields
-- **Keyboard appearance** — pushes all bottom-sheet buttons to different y-coordinates
-
-**Conditional batching.** Batch the predictable parts, insert a state check (UI dump) at transition points, then batch again.
+**Not safe to batch.** Anything that changes the screen layout unpredictably — modals, keyboards appearing, bottom sheets, biometric prompts. These shift coordinates. Insert a UI dump at these transition points to re-read the layout, then continue.
 
 **Keyboard handling.** Never use BACK to dismiss a keyboard — it may navigate away. Tap an empty area instead.
 
-**Biometric → Password flow.** Most apps show biometric auth first, with a password fallback. The biometric prompt is FLAG_SECURE (black screenshot), so detect it via UI dump. Cancel it to reach the password input.
+**Biometric prompts** are FLAG_SECURE (black screenshot). Detect via UI dump, cancel to reach the password fallback.
 
 ## Tips and tricks
 
