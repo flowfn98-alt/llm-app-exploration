@@ -130,38 +130,9 @@ This means apps built with React Native, Flutter, or any framework with continuo
 
 ## Action batching
 
-Once you know a flow — the screens, the coordinates, the transitions — you don't need to check the UI between every tap. You can batch multiple taps into a single MCP call and skip the intermediate screenshot/dump cycles entirely.
+Once you know a flow — the screens, the coordinates, the transitions — you don't need to check the UI between every tap. Use `mobile_batch_taps` to execute multiple taps in a single MCP call, skipping the intermediate screenshot/dump cycles entirely.
 
-**Why it matters.** Each action normally costs a full cycle: tap → wait → screenshot → UI dump → LLM decision → next tap. That's 5–10 seconds per step. A 10-step flow takes a minute. With batching, the same 10 steps execute in under 2 seconds.
-
-**How it works.** Use `mobile_batch_taps` with a JSON array of coordinates and optional delays:
-
-```json
-// Example: Enter password 123456 on a numpad
-{
-  "device": "DEVICE_ID",
-  "taps": [
-    {"x": 180, "y": 1743},
-    {"x": 540, "y": 1743},
-    {"x": 900, "y": 1743},
-    {"x": 180, "y": 1911},
-    {"x": 540, "y": 1911},
-    {"x": 900, "y": 1911}
-  ]
-}
-
-// Example: With longer delays for cross-screen transitions
-{
-  "taps": [
-    {"x": 540, "y": 2097, "delayAfter": 1500},
-    {"x": 180, "y": 1743},
-    {"x": 540, "y": 1743},
-    {"x": 900, "y": 1743, "delayAfter": 500}
-  ]
-}
-```
-
-Default delay between taps is 200ms. Override with `delayAfter` (in ms) when a transition needs more time.
+**Why it matters.** Each action normally costs a full cycle: tap → wait → UI dump → LLM decision → next tap. That's 5–10 seconds per step. A 10-step flow takes a minute. With batching, the same 10 steps execute in under 2 seconds.
 
 **When to batch.** Same-screen actions are safe to batch — field edits, toggles, typing. Cross-screen transitions need timing (sleep) but work reliably when you know the target coordinates.
 
